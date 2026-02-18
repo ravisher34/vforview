@@ -1,0 +1,95 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'com.google.gms.google-services'
+
+android {
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'org.traccar.vforview'
+        minSdkVersion 23
+        //noinspection EditedTargetSdkVersion
+        targetSdkVersion 36
+        versionCode 101
+        versionName '1.0.1'
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("signatures/vforview.keystore")
+            storePassword = "vforview2025@#!"
+            keyPassword = "vforview2025@#!"
+            keyAlias = "vforview"
+        }
+    }
+
+    buildTypes {
+        debug {
+            debuggable = true
+        }
+        release {
+            debuggable = false
+            minifyEnabled = true
+            shrinkResources = false
+            signingConfig = signingConfigs["release"]
+            proguardFiles(
+                    getDefaultProguardFile("proguard-android-optimize.txt"),
+                    "proguard-rules.pro"
+            )
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    flavorDimensions 'default'
+    productFlavors {
+        regular {
+            isDefault = true
+        }
+        google
+    }
+    namespace 'org.traccar.vforview'
+}
+
+dependencies {
+    implementation 'com.google.android.material:material:1.13.0'
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
+    implementation 'androidx.preference:preference-ktx:1.2.1'
+    implementation 'androidx.core:core-ktx:1.16.0'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'com.google.firebase:firebase-functions:22.1.0'
+    googleImplementation platform('com.google.firebase:firebase-bom:34.9.0')
+    googleImplementation 'com.google.firebase:firebase-core'
+    googleImplementation 'com.google.firebase:firebase-analytics'
+    googleImplementation 'com.google.firebase:firebase-crashlytics'
+    googleImplementation 'com.google.firebase:firebase-messaging'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+if (getGradle().getStartParameter().getTaskRequests().toString().contains('Google')) {
+    apply plugin: 'com.google.gms.google-services'
+    apply plugin: 'com.google.firebase.crashlytics'
+
+    tasks.register('copyJson', Copy) {
+        from '../../environment/google-services'
+        into '.'
+        include 'traccar-manager-android.json'
+        rename('traccar-manager-android.json', 'google-services.json')
+    }
+
+    afterEvaluate {
+        preBuild.dependsOn copyJson
+    }
+}
